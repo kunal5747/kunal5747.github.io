@@ -1,0 +1,19 @@
+[
+  { "name": "GST portal challans", "source": "gst_portal", "ledger": "Duties & Taxes", "confidence": 1.0 },
+  { "name": "Food delivery -> Staff Welfare", "keywords": ["swiggy", "zomato", "instamart", "dunzo"], "ledger": "Staff Welfare", "confidence": 0.95 },
+  { "name": "Advertising", "keywords": ["google ads", "facebook ads", "meta ads", " ads "], "ledger": "Advertisement Expenses", "confidence": 0.9 },
+  { "name": "Software subscriptions", "keywords": ["aws", "amazon web services", "google workspace", "google cloud", "microsoft 365", "azure", "github", "zoom", "google adwords"], "ledger": "Software Subscriptions", "confidence": 0.92 },
+  { "name": "Telephone & Internet", "keywords": ["jio", "airtel", "vodafone", "vi ", "bsnl", "postpaid", "prepaid recharge", "broadband"], "ledger": "Telephone Expenses", "confidence": 0.93 },
+  { "name": "Electricity", "keywords": ["mseb", "bescom", "electricity", "torrent power", "tata power", "adani electricity"], "ledger": "Electricity Charges", "confidence": 0.95 },
+  { "name": "Rent", "keywords": ["rent"], "ledger": "Rent", "confidence": 0.9 },
+  { "name": "Salaries", "keywords": ["salary", "payroll", "wages"], "ledger": "Salaries", "confidence": 0.95 },
+  { "name": "Fuel & Conveyance", "keywords": ["petrol", "diesel", "iocl", "bpcl", "hpcl", "hp petrol", "indian oil", "fuel"], "ledger": "Fuel & Conveyance", "confidence": 0.9 },
+  { "name": "Travelling", "keywords": ["uber", "ola", "rapido", "indigo", "vistara", "air india", "irctc", "makemytrip"], "ledger": "Travelling Expenses", "confidence": 0.9 },
+  { "name": "Bank charges", "keywords": ["bank charges", "amc", "chgs", "processing fee", "annual fee"], "ledger": "Bank Charges", "confidence": 0.95 },
+  { "name": "Duties & Taxes (narration)", "keywords": ["gst payment", "cgst", "sgst", "igst", "tds", "advance tax"], "ledger": "Duties & Taxes", "confidence": 0.95 },
+  { "name": "Insurance", "keywords": ["lic", "insurance", "premium", "policy"], "ledger": "Insurance", "confidence": 0.88 },
+  { "name": "Office supplies (Amazon/Flipkart)", "keywords": ["amazon retail", "flipkart", "stationery", "printing"], "ledger": "Office Supplies", "confidence": 0.7 },
+  { "name": "Interest income", "direction": "inflow", "keywords": ["interest credit", "int credit", "savings interest"], "ledger": "Interest Income", "confidence": 0.9 },
+  { "name": "Professional fees received", "direction": "inflow", "keywords": ["consulting", "professional fee", "fee received", "retainer"], "ledger": "Professional Fees", "confidence": 0.85 },
+  { "name": "Credit card bill payment", "direction": "inflow", "keywords": ["payment received", "statement payment", "autopay"], "ledger": "Bank Account", "confidence": 0.9 }
+]
