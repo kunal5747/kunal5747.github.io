@@ -71,10 +71,30 @@ principle made concrete: the machine never invents a classification it isn't
 sure of. Anything still unanswered is parked in **Suspense A/c** so nothing is
 ever dropped.
 
-### 4 · Export
+### 4 · Export — a connector for whatever they use
 
-The finished, clean data goes into Tally as **Excel/XML**, or **syncs directly
-to Tally's local server on port 9000** via its HTTP/XML gateway.
+Export is handled by **pluggable connectors**, so LedgerFlow isn't locked to one
+package. The finished, clean data goes into **Tally** as XML (or **syncs
+directly to Tally's local server on port 9000** via its HTTP/XML gateway), and
+the same neutral vouchers can target **Zoho Books**, **Busy**, or a generic
+CSV/JSON. Supporting a new system is one small connector class — nothing else in
+the pipeline changes.
+
+```bash
+python -m ledgerflow.cli connectors                    # list adapters
+python -m ledgerflow.cli run --connector tally --sync  # live to Tally:9000
+python -m ledgerflow.cli run --connector zoho_books    # or a file export
+```
+
+### Ready for a real statement
+
+Ingestion auto-detects real-world layouts — CSV **or** Excel (`.xlsx`),
+preamble/junk rows, different column names, 2-digit years, `dd-MMM-yyyy` dates,
+and separate Debit/Credit *or* a single Amount + Dr/Cr column:
+
+```bash
+python -m ledgerflow.cli run --statement mystatement.xlsx --connector tally
+```
 
 ---
 

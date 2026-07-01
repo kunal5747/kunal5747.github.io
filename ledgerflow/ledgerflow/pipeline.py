@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import export, ingest, rules_engine, suspense
+from . import connectors, ingest, rules_engine, suspense
 from .models import Transaction, TxnStatus
 
 
@@ -15,6 +15,7 @@ class PipelineResult:
     transactions: list[Transaction]
     review_queue: list[dict]
     stats: dict = field(default_factory=dict)
+    artifacts: list[str] = field(default_factory=list)
 
 
 def _compute_stats(txns: list[Transaction]) -> dict:
@@ -38,16 +39,27 @@ def run(
     rules_path: str | Path | None = None,
     responses_path: str | Path | None = None,
     company: str = "Demo Company",
+    connector: str = "tally",
     sync: bool = False,
     tally_host: str = "localhost",
     tally_port: int = 9000,
+    statement_file: str | Path | None = None,
+    statement_source: str = "bank",
 ) -> PipelineResult:
-    """Run all four stages and write outputs to ``output_dir``."""
+    """Run all four stages and write outputs to ``output_dir``.
+
+    If ``statement_file`` is given, that single real file is ingested (with
+    format auto-detection); otherwise the known feeds in ``input_dir`` are used.
+    ``connector`` selects the accounting-software adapter for export.
+    """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Stage 1 — Ingestion.
-    txns = ingest.ingest_directory(input_dir)
+    if statement_file:
+        txns = ingest.read_statement_auto(statement_file, source=statement_source)
+    else:
+        txns = ingest.ingest_directory(input_dir)
 
     # Stage 2 — Rules engine.
     rules = rules_engine.load_rules(rules_path)
@@ -58,25 +70,33 @@ def run(
     responses = suspense.load_responses(responses_path)
     if responses:
         suspense.apply_responses(txns, responses)
-        # Refresh the queue so resolved items drop off.
-        queue = suspense.flag_suspense(txns)
+        queue = suspense.flag_suspense(txns)  # refresh; resolved items drop off
 
-    # Stage 4 — Export.
-    xml = export.to_tally_xml(txns, company=company)
-    (output_dir / "tally_import.xml").write_text(xml, encoding="utf-8")
-    export.to_daybook_csv(txns, output_dir / "daybook.csv")
+    # Stage 4 — Export via the selected connector plugin.
+    conn = connectors.get(connector)
+    artifacts = conn.render(txns, company=company)
+    for filename, content in artifacts.items():
+        (output_dir / filename).write_text(content, encoding="utf-8")
+
     (output_dir / "review_queue.json").write_text(
         json.dumps(queue, indent=2), encoding="utf-8"
     )
 
     stats = _compute_stats(txns)
+    stats["connector"] = conn.name
+    if sync:
+        ok, message = conn.push(
+            txns, company=company, host=tally_host, port=tally_port
+        )
+        stats["sync_ok"] = ok
+        stats["sync_message"] = message
     (output_dir / "summary.json").write_text(
         json.dumps(stats, indent=2), encoding="utf-8"
     )
 
-    if sync:
-        ok, message = export.sync_to_tally(xml, host=tally_host, port=tally_port)
-        stats["tally_sync_ok"] = ok
-        stats["tally_sync_message"] = message
-
-    return PipelineResult(transactions=txns, review_queue=queue, stats=stats)
+    return PipelineResult(
+        transactions=txns,
+        review_queue=queue,
+        stats=stats,
+        artifacts=sorted(artifacts) + ["review_queue.json", "summary.json"],
+    )

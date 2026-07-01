@@ -14,6 +14,7 @@ dropped — the CA can reclassify it later inside Tally.
 from __future__ import annotations
 
 import csv
+import io
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from urllib import request
@@ -110,34 +111,54 @@ def to_tally_xml(txns: list[Transaction], company: str = "Demo Company") -> str:
     )
 
 
-def to_daybook_csv(txns: list[Transaction], path: str | Path) -> None:
-    """Write a flat, Excel-friendly day book."""
+def double_entry(txn: Transaction) -> tuple[str, str]:
+    """Return (debit_ledger, credit_ledger) for a transaction."""
+    ledger = _effective_ledger(txn)
+    if txn.direction == Direction.OUTFLOW:
+        return ledger, txn.contra_ledger  # Payment: debit expense, credit bank
+    return txn.contra_ledger, ledger      # Receipt: debit bank, credit income
+
+
+def voucher_dicts(txns: list[Transaction]) -> list[dict]:
+    """Neutral, software-agnostic voucher rows any connector can map from."""
+    rows: list[dict] = []
+    for t in txns:
+        debit_ledger, credit_ledger = double_entry(t)
+        rows.append(
+            {
+                "date": t.date,
+                "voucher_type": _voucher_type(t),
+                "reference": t.reference,
+                "narration": t.narration,
+                "debit_ledger": debit_ledger,
+                "credit_ledger": credit_ledger,
+                "amount": _q(t.amount),
+                "status": t.status,
+                "confidence": round(t.confidence, 2),
+            }
+        )
+    return rows
+
+
+def daybook_csv_string(txns: list[Transaction]) -> str:
+    """A flat, Excel-friendly day book as a CSV string."""
     fields = [
         "date", "voucher_type", "reference", "narration",
         "debit_ledger", "credit_ledger", "amount", "status", "confidence",
     ]
-    with open(path, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=fields)
-        writer.writeheader()
-        for t in txns:
-            ledger = _effective_ledger(t)
-            if t.direction == Direction.OUTFLOW:
-                debit_ledger, credit_ledger = ledger, t.contra_ledger
-            else:
-                debit_ledger, credit_ledger = t.contra_ledger, ledger
-            writer.writerow(
-                {
-                    "date": t.date,
-                    "voucher_type": _voucher_type(t),
-                    "reference": t.reference,
-                    "narration": t.narration,
-                    "debit_ledger": debit_ledger,
-                    "credit_ledger": credit_ledger,
-                    "amount": _q(t.amount),
-                    "status": t.status,
-                    "confidence": f"{t.confidence:.2f}",
-                }
-            )
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=fields)
+    writer.writeheader()
+    for row in voucher_dicts(txns):
+        row = dict(row)
+        row["confidence"] = f"{row['confidence']:.2f}"
+        writer.writerow(row)
+    return buf.getvalue()
+
+
+def to_daybook_csv(txns: list[Transaction], path: str | Path) -> None:
+    """Write a flat, Excel-friendly day book to a file."""
+    Path(path).write_text(daybook_csv_string(txns), encoding="utf-8")
 
 
 def sync_to_tally(

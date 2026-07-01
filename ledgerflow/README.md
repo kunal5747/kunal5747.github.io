@@ -47,6 +47,45 @@ python -m unittest discover -s tests
 
 ---
 
+## Feed your own statement
+
+Point it at a real bank or credit-card file — CSV **or** Excel (`.xlsx`). The
+reader auto-detects the layout (preamble rows, different column names, date
+formats, separate Debit/Credit *or* a single Amount + Dr/Cr column):
+
+```bash
+python -m ledgerflow.cli run --statement /path/to/mystatement.xlsx
+python -m ledgerflow.cli run --statement card.csv --statement-type credit_card
+```
+
+The results land in `output/` ready to import.
+
+---
+
+## Connectors (plug in to whatever they use)
+
+Export is handled by pluggable **connectors**, so LedgerFlow can target
+different accounting software without changing the pipeline:
+
+```bash
+python -m ledgerflow.cli connectors                     # list them
+python -m ledgerflow.cli run --connector tally --sync   # push live to Tally
+python -m ledgerflow.cli run --connector zoho_books     # or export a file
+```
+
+| Connector | Output | Live sync |
+|-----------|--------|-----------|
+| `tally` | Native Tally import XML + day-book CSV | Yes — port 9000 |
+| `zoho_books` | Zoho Books Manual Journals CSV | File export |
+| `busy` | Busy Accounting voucher CSV | File export |
+| `generic` | Neutral day-book CSV + `vouchers.json` | File export |
+
+Adding support for new software is one small class in
+[`ledgerflow/connectors/`](ledgerflow/connectors/) — implement `render()`
+(and optionally `push()`), register it, done.
+
+---
+
 ## The four stages
 
 ### 1 · Ingestion — `ingest.py`
@@ -117,20 +156,23 @@ ledgerflow/
 │   ├── export.py        #   stage 4
 │   ├── pipeline.py      #   orchestrates all four
 │   └── cli.py           #   command-line entry point
+│   └── connectors/      #   pluggable export adapters (Tally, Zoho, Busy, ...)
 ├── rules.json           # ledger-mapping rules (editable by a CA)
 ├── sample_data/         # simulated bank / card / GST feeds
-└── tests/               # unittest suite (10 tests, stdlib only)
+└── tests/               # unittest suite (18 tests, stdlib only)
 ```
 
 ---
 
 ## Status & roadmap
 
-This is a working prototype of the core engine. Natural next steps:
+This is a working prototype of the core engine. It already handles real
+statement formats (CSV/XLSX, auto-detected) and exports to Tally, Zoho Books,
+and Busy via the connector layer. Natural next steps:
 
-- Real Account Aggregator + GSTN connectors (replace the file readers).
+- Live Account Aggregator + GSTN ingestion (replace the file readers).
 - A hosted review page that renders `review_queue.json` as the phone dropdown.
-- Bank-specific statement parsers (HDFC, ICICI, SBI, Axis formats).
+- More connectors (QuickBooks, Marg, Vyapar) — one class each.
 - Confidence-based review (send borderline auto-matches for confirmation too).
 - Learning from client answers to grow the rule set over time.
 
