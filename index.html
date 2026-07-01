@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project ATLAS — The AI Operating System for Businesses</title>
+  <meta name="description" content="ATLAS is an AI Company Operating System that lets anyone run an entire company using teams of specialized AI agents working together under human supervision." />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-soft: #111834;
+      --card: #151d3b;
+      --border: #263056;
+      --text: #e8ecf8;
+      --muted: #9aa6cc;
+      --accent: #6ea8fe;
+      --accent-2: #7ef0c8;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 70% -10%, #1a2450 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    header { padding: 90px 0 60px; text-align: center; }
+    .eyebrow {
+      display: inline-block; letter-spacing: 2px; text-transform: uppercase;
+      font-size: 12px; color: var(--accent-2); border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 999px; margin-bottom: 22px;
+    }
+    h1 { font-size: clamp(38px, 7vw, 66px); line-height: 1.05; margin: 0 0 16px; }
+    .tagline { font-size: clamp(18px, 3vw, 24px); color: var(--muted); margin: 0 auto; max-width: 640px; }
+    .cta { margin-top: 34px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; padding: 12px 22px; border-radius: 10px; font-weight: 600;
+      border: 1px solid var(--border);
+    }
+    .btn.primary { background: var(--accent); color: #08122c; border-color: transparent; }
+    .btn.primary:hover { text-decoration: none; opacity: .92; }
+    .btn.ghost { color: var(--text); }
+
+    .quote {
+      margin: 10px auto 0; max-width: 680px; color: var(--muted);
+      font-style: italic; font-size: 16px;
+    }
+
+    section { padding: 46px 0; }
+    h2 { font-size: 28px; margin: 0 0 10px; }
+    .lead { color: var(--muted); margin: 0 0 26px; }
+
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .card {
+      background: linear-gradient(180deg, var(--card), var(--bg-soft));
+      border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+      transition: transform .15s ease, border-color .15s ease;
+    }
+    .card:hover { transform: translateY(-3px); border-color: var(--accent); }
+    .card .num { font-size: 12px; color: var(--accent-2); letter-spacing: 1px; }
+    .card h3 { margin: 6px 0 8px; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+    .card a.stretch::after { content: ""; position: absolute; inset: 0; }
+    .card { position: relative; }
+
+    .principles { columns: 2; column-gap: 28px; color: var(--muted); }
+    .principles li { margin-bottom: 8px; break-inside: avoid; }
+    @media (max-width: 560px) { .principles { columns: 1; } }
+
+    .flow {
+      background: var(--bg-soft); border: 1px solid var(--border); border-radius: 14px;
+      padding: 22px; color: var(--muted); font-size: 14px; overflow-x: auto;
+    }
+    .flow code { color: var(--accent-2); }
+
+    footer { padding: 50px 0 70px; color: var(--muted); font-size: 14px; text-align: center; border-top: 1px solid var(--border); margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Project ATLAS</span>
+      <h1>The AI Operating System for Businesses</h1>
+      <p class="tagline">Run an entire company with teams of specialized AI agents working together — under human supervision.</p>
+      <p class="quote">ATLAS is not a chatbot. It is an AI Company Operating System. The human becomes the CEO; ATLAS becomes the management team.</p>
+      <div class="cta">
+        <a class="btn primary" href="docs/00-overview.md">Read the Blueprint</a>
+        <a class="btn ghost" href="#blueprint">Explore the docs</a>
+      </div>
+    </header>
+
+    <section>
+      <h2>The idea</h2>
+      <p class="lead">Companies run on dozens of disconnected tools — ERP, CRM, HRMS, accounting, email, WhatsApp, project management, BI. Employees are the glue. ATLAS becomes the intelligent layer above all of them: instead of people manually coordinating work, AI agents coordinate it.</p>
+      <div class="flow">
+<pre style="margin:0"><code>HUMAN (CEO)  —approves the important decisions—
+    ▼
+  ATLAS      —AI agents · shared memory · orchestration—
+    ▼
+ERP · CRM · Email · WhatsApp · Accounting · Banking · …</code></pre>
+      </div>
+    </section>
+
+    <section id="blueprint">
+      <h2>The Master Blueprint</h2>
+      <p class="lead">A structured reference manual for engineers, AI agents, executives, and investors — planned as a company that scales over decades.</p>
+      <div class="grid">
+        <div class="card"><span class="num">00</span><h3><a class="stretch" href="docs/00-overview.md">Overview</a></h3><p>Mission, vision, and how the pieces fit together.</p></div>
+        <div class="card"><span class="num">01</span><h3><a class="stretch" href="docs/01-product-vision.md">Product Vision</a></h3><p>Philosophy, design principles, human-in-the-loop.</p></div>
+        <div class="card"><span class="num">02</span><h3><a class="stretch" href="docs/02-architecture.md">Architecture</a></h3><p>Agent framework, memory, workflow orchestration.</p></div>
+        <div class="card"><span class="num">03</span><h3><a class="stretch" href="docs/03-engineering.md">Engineering</a></h3><p>Tech direction, modular services, dev workflow.</p></div>
+        <div class="card"><span class="num">04</span><h3><a class="stretch" href="docs/04-operations.md">Operations</a></h3><p>Security, auditability, monitoring, reliability.</p></div>
+        <div class="card"><span class="num">05</span><h3><a class="stretch" href="docs/05-hiring-and-team.md">Hiring &amp; Team</a></h3><p>Org design, roles, and culture as we grow.</p></div>
+        <div class="card"><span class="num">06</span><h3><a class="stretch" href="docs/06-finance.md">Finance</a></h3><p>Revenue model, unit economics, funding.</p></div>
+        <div class="card"><span class="num">07</span><h3><a class="stretch" href="docs/07-go-to-market.md">Go-to-Market</a></h3><p>ConstructionOS first, then the vertical family.</p></div>
+        <div class="card"><span class="num">08</span><h3><a class="stretch" href="docs/08-roadmap.md">Roadmap</a></h3><p>From platform to industry operating systems.</p></div>
+        <div class="card"><span class="num">09</span><h3><a class="stretch" href="docs/09-constructionos.md">ConstructionOS</a></h3><p>The first commercial vertical, module by module.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Design principles</h2>
+      <p class="lead">The long-term principles ATLAS is built around.</p>
+      <ul class="principles">
+        <li>Plain-English-first interaction</li>
+        <li>AI executes; humans approve important decisions</li>
+        <li>Planning before implementation</li>
+        <li>Modular, reusable architecture</li>
+        <li>One core platform serving many industries</li>
+        <li>Outcome-focused rather than tool-focused</li>
+        <li>Enterprise-grade security, auditability, and scalability</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Strategy in one line</h2>
+      <div class="flow">
+        Build one reusable AI Agent Platform → launch <strong>ConstructionOS</strong> as the first vertical → reuse the platform for additional industries → grow recurring enterprise revenue through subscriptions, implementation, and premium AI.
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      Project ATLAS · The AI Operating System for Businesses<br />
+      Published via GitHub Pages · <a href="docs/00-overview.md">Read the Master Blueprint</a>
+    </div>
+  </footer>
+</body>
+</html>
