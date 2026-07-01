@@ -42,7 +42,30 @@ be read as a company plan that scales over decades, not just a software spec.
 | 06 | [Finance](docs/06-finance.md) | Revenue model, unit economics, funding strategy |
 | 07 | [Go-to-Market](docs/07-go-to-market.md) | ConstructionOS first, then the vertical family |
 | 08 | [Roadmap](docs/08-roadmap.md) | Phased plan from platform to industry operating systems |
-| 09 | [ConstructionOS](docs/09-constructionos.md) | The first commercial vertical, module by module |
+| 09 | [ConstructionOS](docs/09-constructionos.md) | A commercial vertical, module by module |
+| 10 | [LedgerFlow](docs/10-ledgerflow.md) | **The first tool being built** — bank statements → Tally |
+
+---
+
+## The first tool: LedgerFlow
+
+The first product being built under ATLAS is **[LedgerFlow](ledgerflow/README.md)** —
+a middleware that turns bank statements into clean, Tally-ready data for
+Chartered Accountants in India.
+
+Bank statements go in one end; sorted, ledger-tagged vouchers come out the
+other, in four stages: **ingest → rules engine → suspense loop → export**.
+
+A working prototype (runnable Python, stdlib only, with tests) lives in
+[`/ledgerflow`](ledgerflow/README.md):
+
+```bash
+cd ledgerflow
+python -m ledgerflow.cli run
+# → 35 transactions · 80% auto-classified · Tally XML + CSV written
+```
+
+Read the product write-up: **[docs/10-ledgerflow.md](docs/10-ledgerflow.md)**.
 
 ---
 

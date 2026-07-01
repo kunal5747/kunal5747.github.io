@@ -1,0 +1,4 @@
+[
+  { "date": "20/04/2024", "challan_no": "CIN24APR0001", "amount": 12500.00, "type": "CGST+SGST" },
+  { "date": "20/04/2024", "challan_no": "CIN24APR0002", "amount": 7800.00, "type": "IGST" }
+]

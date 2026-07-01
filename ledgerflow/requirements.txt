@@ -1,0 +1,2 @@
+# LedgerFlow runs on the Python standard library only — no dependencies.
+# Python 3.10+ is required (uses PEP 604 "X | None" type hints).
