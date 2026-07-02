@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import connectors, ingest, rules_engine, suspense
+from . import connectors, ingest, memory as memory_mod, rules_engine, suspense
 from .models import Transaction, TxnStatus
 
 
@@ -22,15 +22,21 @@ class PipelineResult:
 def _compute_stats(txns: list[Transaction]) -> dict:
     total = len(txns)
     auto = sum(1 for t in txns if t.status == TxnStatus.AUTO)
-    resolved = sum(1 for t in txns if t.status == TxnStatus.RESOLVED)
+    from_memory = sum(1 for t in txns if t.matched_rule == "memory")
+    resolved = sum(
+        1 for t in txns
+        if t.status == TxnStatus.RESOLVED and t.matched_rule != "memory"
+    )
     pending = sum(1 for t in txns if t.status == TxnStatus.SUSPENSE)
+    clean = auto + from_memory + resolved
     return {
         "total": total,
         "auto_classified": auto,
+        "from_memory": from_memory,
         "resolved_by_client": resolved,
         "pending_suspense": pending,
         "auto_rate": round(auto / total, 4) if total else 0.0,
-        "clean_rate": round((auto + resolved) / total, 4) if total else 0.0,
+        "clean_rate": round(clean / total, 4) if total else 0.0,
     }
 
 
@@ -46,6 +52,7 @@ def run(
     tally_port: int = 9000,
     statement_file: str | Path | None = None,
     statement_source: str = "bank",
+    memory_path: str | Path | None = None,
 ) -> PipelineResult:
     """Run all four stages and write outputs to ``output_dir``.
 
@@ -66,11 +73,19 @@ def run(
     rules = rules_engine.load_rules(rules_path)
     rules_engine.classify(txns, rules)
 
+    # Stage 2b — Apply learned payee memory (from earlier statements).
+    memory = memory_mod.load_memory(memory_path)
+    learned_applied = memory_mod.apply_memory(txns, memory)
+
     # Stage 3 — Suspense loop.
     queue = suspense.flag_suspense(txns)
     responses = suspense.load_responses(responses_path)
     if responses:
         suspense.apply_responses(txns, responses)
+        # Remember these answers for next time, then persist.
+        newly_learned = memory_mod.learn(txns, memory)
+        if newly_learned:
+            memory_mod.save_memory(memory_path, memory)
         queue = suspense.flag_suspense(txns)  # refresh; resolved items drop off
 
     # Stage 4 — Export via the selected connector plugin.
@@ -88,6 +103,7 @@ def run(
     )
 
     stats = _compute_stats(txns)
+    stats["learned_from_memory"] = learned_applied
     stats["unique_review_parties"] = len(groups)
     stats["connector"] = conn.name
     if sync:
