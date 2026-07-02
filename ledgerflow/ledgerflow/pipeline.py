@@ -14,6 +14,7 @@ from .models import Transaction, TxnStatus
 class PipelineResult:
     transactions: list[Transaction]
     review_queue: list[dict]
+    review_groups: list[dict] = field(default_factory=list)
     stats: dict = field(default_factory=dict)
     artifacts: list[str] = field(default_factory=list)
 
@@ -81,8 +82,13 @@ def run(
     (output_dir / "review_queue.json").write_text(
         json.dumps(queue, indent=2), encoding="utf-8"
     )
+    groups = suspense.group_review(txns)
+    (output_dir / "review_groups.json").write_text(
+        json.dumps(groups, indent=2), encoding="utf-8"
+    )
 
     stats = _compute_stats(txns)
+    stats["unique_review_parties"] = len(groups)
     stats["connector"] = conn.name
     if sync:
         ok, message = conn.push(
@@ -97,6 +103,8 @@ def run(
     return PipelineResult(
         transactions=txns,
         review_queue=queue,
+        review_groups=groups,
         stats=stats,
-        artifacts=sorted(artifacts) + ["review_queue.json", "summary.json"],
+        artifacts=sorted(artifacts)
+        + ["review_queue.json", "review_groups.json", "summary.json"],
     )

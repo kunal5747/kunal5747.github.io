@@ -9,7 +9,7 @@
   { "name": "Salaries", "keywords": ["salary", "payroll", "wages"], "ledger": "Salaries", "confidence": 0.95 },
   { "name": "Fuel & Conveyance", "keywords": ["petrol", "diesel", "iocl", "bpcl", "hpcl", "hp petrol", "indian oil", "fuel"], "ledger": "Fuel & Conveyance", "confidence": 0.9 },
   { "name": "Travelling", "keywords": ["uber", "ola", "rapido", "indigo", "vistara", "air india", "irctc", "makemytrip"], "ledger": "Travelling Expenses", "confidence": 0.9 },
-  { "name": "Bank charges", "keywords": ["bank charges", "amc", "chgs", "processing fee", "annual fee"], "ledger": "Bank Charges", "confidence": 0.95 },
+  { "name": "Bank charges", "keywords": ["imps charges", "neft charges", "rtgs charges", "bank charges", "amc", "chgs", "processing fee", "annual fee", "sms charges", "service charge"], "ledger": "Bank Charges", "confidence": 0.95 },
   { "name": "Duties & Taxes (narration)", "keywords": ["gst payment", "cgst", "sgst", "igst", "tds", "advance tax"], "ledger": "Duties & Taxes", "confidence": 0.95 },
   { "name": "Insurance", "keywords": ["lic", "insurance", "premium", "policy"], "ledger": "Insurance", "confidence": 0.88 },
   { "name": "Office supplies (Amazon/Flipkart)", "keywords": ["amazon retail", "flipkart", "stationery", "printing"], "ledger": "Office Supplies", "confidence": 0.7 },

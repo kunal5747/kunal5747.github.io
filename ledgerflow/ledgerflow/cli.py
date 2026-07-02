@@ -27,13 +27,23 @@ def _print_summary(result: pipeline.PipelineResult, output: str) -> None:
     print(f"  Auto-classified       : {s['auto_classified']}  "
           f"({s['auto_rate'] * 100:.1f}%)")
     print(f"  Resolved by client    : {s['resolved_by_client']}")
-    print(f"  Still in suspense     : {s['pending_suspense']}")
+    print(f"  Still in suspense     : {s['pending_suspense']}  "
+          f"({s.get('unique_review_parties', 0)} unique parties to ask)")
     print(f"  Clean & ready         : {s['clean_rate'] * 100:.1f}%")
     print(f"  Connector             : {s.get('connector')}")
     if "sync_ok" in s:
         state = "OK" if s["sync_ok"] else "FAILED"
         print(f"  Live sync             : {state} — {s['sync_message']}")
-    if result.review_queue:
+
+    if result.review_groups:
+        print("\n  Suspense grouped by counterparty (ask each ONCE via WhatsApp):")
+        for g in result.review_groups[:12]:
+            net = f"out {g['total_outflow']} / in {g['total_inflow']}"
+            print(f"    - {g['counterparty'][:26]:26}  x{g['count']:<4}  {net}")
+        extra = len(result.review_groups) - 12
+        if extra > 0:
+            print(f"    ... and {extra} more parties (see review_groups.json)")
+    elif result.review_queue:
         print("\n  Pending review links (would be sent via WhatsApp):")
         for item in result.review_queue:
             print(f"    - {item['date']}  {item['amount']:>12}  "

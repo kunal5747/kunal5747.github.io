@@ -146,6 +146,49 @@ Date,Description,Amount
         self.assertEqual(txns[1].direction, Direction.INFLOW)
 
 
+class TestPdfStatementParsing(unittest.TestCase):
+    # Bank-of-Maharashtra-style lines: DATE PARTICULARS AMOUNT{Dr|Cr} BALANCE.
+    LINES = [
+        "STATEMENT OF ACCOUNT FOR THE PERIOD OF 05-06-2025 to 05-06-2026",
+        "DATE PARTICULARS CHQ.NO. WITHDRAWALS DEPOSITS BALANCE",
+        "31-05-2026 IMPS Charges/615123743570 5.90Dr 3,137.37",
+        "31-05-2026 MB/IMPS/615123743570/VISHAL/UTIB/XXXXXX5072/Bill 40,000.00Dr 3,143.27",
+        "31-05-2026 IMPS/615115089165/GANESH /KKBK/XXXXXX6048/RETUR 1,50,000.00Cr 1,54,155.07",
+        "PAGE:1",
+    ]
+
+    def test_parses_only_transaction_rows(self):
+        from ledgerflow.ingest import parse_statement_lines
+        txns = parse_statement_lines(self.LINES)
+        self.assertEqual(len(txns), 3)
+
+    def test_drcr_suffix_sets_direction_and_amount(self):
+        from ledgerflow.ingest import parse_statement_lines
+        txns = parse_statement_lines(self.LINES)
+        self.assertEqual(txns[0].direction, Direction.OUTFLOW)   # charges
+        self.assertEqual(str(txns[0].amount), "5.90")
+        self.assertEqual(txns[2].direction, Direction.INFLOW)    # 1,50,000 Cr
+        self.assertEqual(str(txns[2].amount), "150000.00")
+
+    def test_reference_extracted_from_narration(self):
+        from ledgerflow.ingest import parse_statement_lines
+        txns = parse_statement_lines(self.LINES)
+        self.assertEqual(txns[1].reference, "615123743570")
+
+    def test_counterparty_extraction_and_grouping(self):
+        from ledgerflow.ingest import parse_statement_lines
+        from ledgerflow import suspense
+        txns = parse_statement_lines(self.LINES)
+        self.assertEqual(suspense.extract_counterparty(txns[1].narration), "Vishal")
+        # All three are unclassified here → grouped by party.
+        for t in txns:
+            t.status = "suspense"
+        groups = suspense.group_review(txns)
+        parties = {g["counterparty"] for g in groups}
+        self.assertIn("Vishal", parties)
+        self.assertIn("Ganesh", parties)
+
+
 class TestConnectors(unittest.TestCase):
     def setUp(self):
         sample = Path(__file__).resolve().parent.parent

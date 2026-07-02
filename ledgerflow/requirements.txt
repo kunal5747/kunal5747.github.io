@@ -1,2 +1,7 @@
-# LedgerFlow runs on the Python standard library only — no dependencies.
+# LedgerFlow's core runs on the Python standard library only.
 # Python 3.10+ is required (uses PEP 604 "X | None" type hints).
+
+# Optional: PDF bank-statement ingestion (text-layer PDFs).
+# Install only if you need to read .pdf statements:
+#   pip install pypdf
+# pypdf
