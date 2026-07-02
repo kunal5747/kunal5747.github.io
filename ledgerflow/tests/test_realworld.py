@@ -249,6 +249,44 @@ class TestLearningMemory(unittest.TestCase):
         self.assertEqual(mem.load_memory(None), {})
 
 
+class TestHostedReviewRoundTrip(unittest.TestCase):
+    LINES = [
+        "01-05-2026 MB/IMPS/611111111111/KUNAL/UTIB/XXXXXX3424/Bill 100.00Dr 900.00",
+        "02-05-2026 MB/611111111112/XXXXXX6831/KUNAL DNYANOBA/Bill 200.00Dr 700.00",
+        "03-05-2026 MB/IMPS/611111111113/VISHAL/UTIB/XXXXXX5072/Bill 300.00Dr 400.00",
+    ]
+
+    def _suspense_txns(self):
+        from ledgerflow.ingest import parse_statement_lines
+        txns = parse_statement_lines(self.LINES)
+        for t in txns:
+            t.status = "suspense"
+        return txns
+
+    def test_group_key_answers_resolve_all_matching_txns(self):
+        from ledgerflow import suspense
+        txns = self._suspense_txns()
+        groups = suspense.group_review(txns)
+        key_by_name = {g["counterparty"]: g["key"] for g in groups}
+        # Answer just the (merged) Kunal group -> both Kunal lines resolve.
+        kunal_key = key_by_name[[n for n in key_by_name if "Kunal" in n][0]]
+        resolved = suspense.apply_group_responses(
+            txns, {kunal_key: "Sundry Creditors (paid a supplier)"})
+        self.assertEqual(resolved, 2)
+        kunal = [t for t in txns if "KUNAL" in t.narration.upper()]
+        self.assertTrue(all(t.status == "resolved" for t in kunal))
+        self.assertTrue(all(t.ledger == "Sundry Creditors" for t in kunal))
+        self.assertEqual(kunal[0].matched_rule, "client-response")
+
+    def test_load_group_responses_accepts_both_shapes(self):
+        from ledgerflow import suspense
+        with tempfile.TemporaryDirectory() as d:
+            p1 = Path(d) / "a.json"; p1.write_text('{"answers":{"vishal":"Staff Welfare"}}')
+            p2 = Path(d) / "b.json"; p2.write_text('{"vishal":"Staff Welfare"}')
+            self.assertEqual(suspense.load_group_responses(p1), {"vishal": "Staff Welfare"})
+            self.assertEqual(suspense.load_group_responses(p2), {"vishal": "Staff Welfare"})
+
+
 class TestConnectors(unittest.TestCase):
     def setUp(self):
         sample = Path(__file__).resolve().parent.parent

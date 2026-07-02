@@ -1,0 +1,107 @@
+{
+  "company": "SAMPLE ENTERPRISES",
+  "period": "01-04-2025 to 31-03-2026",
+  "note": "Illustrative sample data — not a real client statement.",
+  "groups": [
+    {
+      "key": "vishaldnyanob",
+      "counterparty": "Vishal Dnyanob",
+      "count": 44,
+      "total_outflow": "220500.00",
+      "total_inflow": "791206.00",
+      "sample_narration": "MB/IMPS/xxxxxx/VISHAL/UTIB/XXXXXX5072/Bill",
+      "options": [
+        "Sundry Creditors (paid a supplier)",
+        "Sundry Debtors (money from a customer)",
+        "Cash-in-Hand (cash withdrawal)",
+        "Owner's Drawings (personal use)",
+        "Capital / Owner's Funds",
+        "Loan Repayment",
+        "Office Expenses",
+        "Staff Welfare",
+        "Travelling Expenses",
+        "Other (type a note)"
+      ]
+    },
+    {
+      "key": "thecakehouse",
+      "counterparty": "The Cake House",
+      "count": 41,
+      "total_outflow": "5445.00",
+      "total_inflow": "0.00",
+      "sample_narration": "MB/IMPS/xxxxxx/THE CAKE HOUSE/HDFC/XXXXXX4150/Bill",
+      "options": [
+        "Sundry Creditors (paid a supplier)",
+        "Sundry Debtors (money from a customer)",
+        "Cash-in-Hand (cash withdrawal)",
+        "Owner's Drawings (personal use)",
+        "Capital / Owner's Funds",
+        "Loan Repayment",
+        "Office Expenses",
+        "Staff Welfare",
+        "Travelling Expenses",
+        "Other (type a note)"
+      ]
+    },
+    {
+      "key": "abhishekanant",
+      "counterparty": "Abhishek Anant",
+      "count": 44,
+      "total_outflow": "205950.00",
+      "total_inflow": "122500.00",
+      "sample_narration": "MB/IMPS/xxxxxx/ABHISHEK ANANT/KKBK/XXXXXX6048/Bill",
+      "options": [
+        "Sundry Creditors (paid a supplier)",
+        "Sundry Debtors (money from a customer)",
+        "Cash-in-Hand (cash withdrawal)",
+        "Owner's Drawings (personal use)",
+        "Capital / Owner's Funds",
+        "Loan Repayment",
+        "Office Expenses",
+        "Staff Welfare",
+        "Travelling Expenses",
+        "Other (type a note)"
+      ]
+    },
+    {
+      "key": "rutujaprakash",
+      "counterparty": "Rutuja Prakash",
+      "count": 17,
+      "total_outflow": "20500.00",
+      "total_inflow": "23700.00",
+      "sample_narration": "MB/IMPS/xxxxxx/RUTUJA PRAKASH/MAHB/XXXXXX0832/Bill",
+      "options": [
+        "Sundry Creditors (paid a supplier)",
+        "Sundry Debtors (money from a customer)",
+        "Cash-in-Hand (cash withdrawal)",
+        "Owner's Drawings (personal use)",
+        "Capital / Owner's Funds",
+        "Loan Repayment",
+        "Office Expenses",
+        "Staff Welfare",
+        "Travelling Expenses",
+        "Other (type a note)"
+      ]
+    },
+    {
+      "key": "atmcashwithdrawal",
+      "counterparty": "ATM Cash Withdrawal",
+      "count": 9,
+      "total_outflow": "180000.00",
+      "total_inflow": "0.00",
+      "sample_narration": "ATM CASH WITHDRAWAL BRANCH",
+      "options": [
+        "Sundry Creditors (paid a supplier)",
+        "Sundry Debtors (money from a customer)",
+        "Cash-in-Hand (cash withdrawal)",
+        "Owner's Drawings (personal use)",
+        "Capital / Owner's Funds",
+        "Loan Repayment",
+        "Office Expenses",
+        "Staff Welfare",
+        "Travelling Expenses",
+        "Other (type a note)"
+      ]
+    }
+  ]
+}

@@ -86,6 +86,8 @@ def main(argv: list[str] | None = None) -> int:
                      help="Client suspense responses (set to '' to skip)")
     run.add_argument("--memory", default=str(_DEFAULT_MEMORY),
                      help="Learned payee memory file (set to '' to disable)")
+    run.add_argument("--group-responses", default=None,
+                     help="Per-payee answers exported by the hosted review page")
     run.add_argument("--company", default="Demo Company",
                      help="Company name for the export")
     run.add_argument("--connector", default="tally",
@@ -119,6 +121,7 @@ def main(argv: list[str] | None = None) -> int:
             statement_file=args.statement,
             statement_source=args.statement_type,
             memory_path=args.memory or None,
+            group_responses_path=args.group_responses,
         )
         _print_summary(result, args.output)
     return 0

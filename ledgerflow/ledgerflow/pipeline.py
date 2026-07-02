@@ -53,6 +53,7 @@ def run(
     statement_file: str | Path | None = None,
     statement_source: str = "bank",
     memory_path: str | Path | None = None,
+    group_responses_path: str | Path | None = None,
 ) -> PipelineResult:
     """Run all four stages and write outputs to ``output_dir``.
 
@@ -80,8 +81,10 @@ def run(
     # Stage 3 — Suspense loop.
     queue = suspense.flag_suspense(txns)
     responses = suspense.load_responses(responses_path)
-    if responses:
+    group_responses = suspense.load_group_responses(group_responses_path)
+    if responses or group_responses:
         suspense.apply_responses(txns, responses)
+        suspense.apply_group_responses(txns, group_responses)
         # Remember these answers for next time, then persist.
         newly_learned = memory_mod.learn(txns, memory)
         if newly_learned:
