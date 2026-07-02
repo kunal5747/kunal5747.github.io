@@ -88,13 +88,20 @@ python -m ledgerflow.cli run --connector zoho_books    # or a file export
 
 ### Ready for a real statement
 
-Ingestion auto-detects real-world layouts — CSV **or** Excel (`.xlsx`),
-preamble/junk rows, different column names, 2-digit years, `dd-MMM-yyyy` dates,
-and separate Debit/Credit *or* a single Amount + Dr/Cr column:
+Ingestion auto-detects real-world layouts — CSV, Excel (`.xlsx`), **and PDF** —
+handling preamble/junk rows, different column names, 2-digit years,
+`dd-MMM-yyyy` dates, separate Debit/Credit *or* a single Amount + Dr/Cr column,
+and the `AMOUNT{Dr|Cr} BALANCE` rows of Indian bank PDF statements:
 
 ```bash
 python -m ledgerflow.cli run --statement mystatement.xlsx --connector tally
+python -m ledgerflow.cli run --statement statement.pdf   # needs: pip install pypdf
 ```
+
+**Proven on real data.** A real 16-page Bank of Maharashtra PDF ran end-to-end:
+**1,108 transactions** parsed into balanced Tally vouchers, bank charges
+auto-classified, and the 979 remaining transfers grouped into 283 unique
+counterparties — so the client answers once per payee, not once per line.
 
 ---
 

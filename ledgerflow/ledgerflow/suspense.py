@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+from decimal import Decimal
 from pathlib import Path
 
 from .models import Direction, Transaction, TxnStatus, VoucherType
@@ -75,6 +77,64 @@ def flag_suspense(txns: list[Transaction]) -> list[dict]:
             }
         )
     return queue
+
+
+# Bank/IFSC-ish codes and boilerplate tokens that are never a counterparty name.
+_NON_PARTY = {
+    "MB", "IMPS", "NEFT", "RTGS", "UPI", "BILL", "IMPSCHARGES", "CHARGES",
+    "CHECK", "RETUR", "RETURN", "PAYMENT", "TRANSFER", "ACH", "ECS",
+    "UTIB", "HDFC", "KKBK", "MAHB", "SBIN", "ICIC", "PUNB", "BARB", "IBKL",
+    "YESB", "IDIB", "CNRB", "IOBA", "UBIN", "CBIN", "MAHG",
+}
+
+
+def extract_counterparty(narration: str) -> str:
+    """Best-effort payee/payer name from a slash-delimited bank narration.
+
+    e.g. 'MB/IMPS/615123743570/VISHAL/UTIB/XXXXXX5072/Bill' -> 'Vishal'.
+    Returns '' when no name is present (e.g. bank charges).
+    """
+    for part in narration.split("/"):
+        letters = re.sub(r"[^A-Za-z ]", "", part).strip()
+        token = letters.replace(" ", "").upper()
+        if len(letters) >= 3 and token not in _NON_PARTY:
+            return letters.title()
+    return ""
+
+
+def group_review(txns: list[Transaction]) -> list[dict]:
+    """Group still-in-suspense transactions by counterparty.
+
+    A transfer-heavy account can have thousands of unclassified lines but only
+    a handful of *distinct* payees. Grouping means the client answers once per
+    party instead of once per transaction.
+    """
+    groups: dict[str, dict] = {}
+    for txn in txns:
+        if txn.status != TxnStatus.SUSPENSE:
+            continue
+        party = extract_counterparty(txn.narration) or txn.narration[:24]
+        g = groups.setdefault(party, {
+            "counterparty": party, "count": 0,
+            "total_outflow": Decimal("0"), "total_inflow": Decimal("0"),
+            "sample_narration": txn.narration, "options": DROPDOWN_OPTIONS,
+        })
+        g["count"] += 1
+        if txn.direction == Direction.OUTFLOW:
+            g["total_outflow"] += txn.amount
+        else:
+            g["total_inflow"] += txn.amount
+    result = []
+    for g in sorted(groups.values(), key=lambda x: x["count"], reverse=True):
+        result.append({
+            "counterparty": g["counterparty"],
+            "count": g["count"],
+            "total_outflow": f"{g['total_outflow']:.2f}",
+            "total_inflow": f"{g['total_inflow']:.2f}",
+            "sample_narration": g["sample_narration"],
+            "options": g["options"],
+        })
+    return result
 
 
 def _ledger_for_answer(answer: str) -> str:

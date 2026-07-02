@@ -283,6 +283,8 @@ def read_statement_auto(
     contra_ledger = contra_ledger or (
         "Credit Card" if source == "credit_card" else "Bank Account"
     )
+    if path.suffix.lower() == ".pdf":
+        return read_pdf_statement(path, source=source, contra_ledger=contra_ledger)
     rows = _read_rows(path)
     if not rows:
         return []
@@ -381,6 +383,77 @@ def read_bank_statement(path: str | Path) -> list[Transaction]:
 def read_credit_card(path: str | Path) -> list[Transaction]:
     """Read a credit-card export (auto-detecting layout)."""
     return read_statement_auto(path, source="credit_card", contra_ledger="Credit Card")
+
+
+# --------------------------------------------------------------------------- #
+# PDF statements (text-layer PDFs, e.g. Bank of Maharashtra / most Indian banks)
+# --------------------------------------------------------------------------- #
+
+# A transaction row: DATE  PARTICULARS  [CHQ]  AMOUNT{Dr|Cr}  BALANCE
+# The Dr/Cr suffix is attached to the amount (e.g. "40,000.00Dr").
+_PDF_ROW_RE = re.compile(
+    r"^(\d{2}[-/]\d{2}[-/]\d{4})\s+(.*?)\s+([\d,]+\.\d{2})\s*(Dr|Cr)\b\s+([\d,]+\.\d{2})\s*$",
+    re.IGNORECASE,
+)
+_REF_RE = re.compile(r"(\d{9,18})")  # IMPS/NEFT/UTR-style reference numbers
+
+
+def parse_statement_lines(
+    lines: list[str], source: str = "bank", contra_ledger: str = "Bank Account"
+) -> list[Transaction]:
+    """Parse already-extracted PDF text lines into transactions.
+
+    Factored out from PDF reading so it can be unit-tested without a PDF.
+    """
+    txns: list[Transaction] = []
+    for raw in lines:
+        m = _PDF_ROW_RE.match(str(raw).strip())
+        if not m:
+            continue
+        date, narration, amount_str, drcr, _balance = m.groups()
+        iso = _parse_date(date)
+        if iso is None:
+            continue
+        value = _money(amount_str)
+        if value == 0:
+            continue
+        direction = Direction.OUTFLOW if drcr.lower() == "dr" else Direction.INFLOW
+        ref_match = _REF_RE.search(narration)
+        txns.append(
+            Transaction(
+                date=iso,
+                narration=narration.strip(),
+                amount=value,
+                direction=direction,
+                source=source,
+                reference=ref_match.group(1) if ref_match else "",
+                contra_ledger=contra_ledger,
+            )
+        )
+    return txns
+
+
+def read_pdf_statement(
+    path: str | Path,
+    source: str = "bank",
+    contra_ledger: str | None = None,
+) -> list[Transaction]:
+    """Read a text-layer PDF bank statement (needs the optional ``pypdf``)."""
+    try:
+        from pypdf import PdfReader
+    except ImportError as exc:  # pragma: no cover - depends on optional dep
+        raise RuntimeError(
+            "PDF support requires 'pypdf'. Install it with:  pip install pypdf"
+        ) from exc
+
+    contra_ledger = contra_ledger or (
+        "Credit Card" if source == "credit_card" else "Bank Account"
+    )
+    reader = PdfReader(str(path))
+    lines: list[str] = []
+    for page in reader.pages:
+        lines.extend((page.extract_text() or "").splitlines())
+    return parse_statement_lines(lines, source=source, contra_ledger=contra_ledger)
 
 
 def read_gst_portal(path: str | Path) -> list[Transaction]:

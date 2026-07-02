@@ -49,16 +49,27 @@ python -m unittest discover -s tests
 
 ## Feed your own statement
 
-Point it at a real bank or credit-card file — CSV **or** Excel (`.xlsx`). The
-reader auto-detects the layout (preamble rows, different column names, date
-formats, separate Debit/Credit *or* a single Amount + Dr/Cr column):
+Point it at a real bank or credit-card file — CSV, Excel (`.xlsx`), **or PDF**.
+The reader auto-detects the layout (preamble rows, different column names, date
+formats, separate Debit/Credit *or* a single Amount + Dr/Cr column, and the
+`AMOUNT{Dr|Cr}  BALANCE` rows used in Indian bank PDF statements):
 
 ```bash
 python -m ledgerflow.cli run --statement /path/to/mystatement.xlsx
+python -m ledgerflow.cli run --statement statement.pdf     # needs: pip install pypdf
 python -m ledgerflow.cli run --statement card.csv --statement-type credit_card
 ```
 
-The results land in `output/` ready to import.
+The results land in `output/` ready to import. Tested on a real 16-page Bank of
+Maharashtra PDF: **1,108 transactions** parsed into balanced Tally vouchers.
+
+### Ask each payee only once
+
+Transfer-heavy accounts can have thousands of unclassified lines but only a
+handful of distinct payees. The suspense loop **groups by counterparty**
+(`review_groups.json`), so the client answers once per party — not once per
+transaction. In the run above, 979 suspense lines collapsed to 283 unique
+parties to ask about.
 
 ---
 
