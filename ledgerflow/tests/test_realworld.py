@@ -8,6 +8,7 @@ columns, and .xlsx files — so we know LedgerFlow is ready for a real statement
 import tempfile
 import unittest
 import zipfile
+from decimal import Decimal
 from pathlib import Path
 from xml.sax.saxutils import escape
 
@@ -187,6 +188,65 @@ class TestPdfStatementParsing(unittest.TestCase):
         parties = {g["counterparty"] for g in groups}
         self.assertIn("Vishal", parties)
         self.assertIn("Ganesh", parties)
+
+
+class TestPayeeClustering(unittest.TestCase):
+    def test_whole_word_prefix_merges_but_partial_does_not(self):
+        from ledgerflow import suspense
+        rep = suspense.cluster_parties({"Kunal", "Kunal Dnyanoba", "Shreya", "Shreyash"})
+        # 'Kunal' is a whole-word prefix of 'Kunal Dnyanoba' -> merged.
+        self.assertEqual(rep["Kunal"], "Kunal Dnyanoba")
+        # 'Shreya' is only a partial prefix of 'Shreyash' -> kept separate.
+        self.assertNotEqual(rep["Shreya"], rep["Shreyash"])
+
+    def test_grouping_collapses_truncated_duplicates(self):
+        from ledgerflow.ingest import parse_statement_lines
+        from ledgerflow import suspense
+        lines = [
+            "01-05-2026 MB/IMPS/611111111111/KUNAL/UTIB/XXXXXX3424/Bill 100.00Dr 900.00",
+            "02-05-2026 MB/611111111112/XXXXXX6831/KUNAL DNYANOBA/Bill 200.00Dr 700.00",
+        ]
+        txns = parse_statement_lines(lines)
+        for t in txns:
+            t.status = "suspense"
+        groups = suspense.group_review(txns)
+        self.assertEqual(len(groups), 1)          # both Kunal lines -> one party
+        self.assertEqual(groups[0]["count"], 2)
+
+
+class TestLearningMemory(unittest.TestCase):
+    def _txn(self, narration, ledger=None, rule=None):
+        from ledgerflow.models import Direction, Transaction, TxnStatus
+        t = Transaction(date="2026-05-01", narration=narration, amount=Decimal("100"),
+                        direction=Direction.OUTFLOW, source="bank")
+        t.status = TxnStatus.RESOLVED if ledger else TxnStatus.SUSPENSE
+        t.ledger, t.matched_rule = ledger, rule
+        return t
+
+    def test_learn_then_apply_roundtrip(self):
+        from ledgerflow import memory as mem
+        from ledgerflow.models import TxnStatus
+        answered = self._txn("MB/IMPS/1/VISHAL/UTIB/XXXXXX5072/Bill",
+                             ledger="Sundry Creditors", rule="client-response")
+        store: dict = {}
+        self.assertEqual(mem.learn([answered], store), 1)
+        # A fresh, unclassified Vishal transaction on a later statement:
+        later = self._txn("MB/IMPS/2/VISHAL/UTIB/XXXXXX5072/Bill")
+        self.assertEqual(mem.apply_memory([later], store), 1)
+        self.assertEqual(later.status, TxnStatus.RESOLVED)
+        self.assertEqual(later.ledger, "Sundry Creditors")
+        self.assertEqual(later.matched_rule, "memory")
+
+    def test_persist_and_reload(self):
+        from ledgerflow import memory as mem
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "memory.json"
+            mem.save_memory(path, {"vishal": "Sundry Creditors"})
+            self.assertEqual(mem.load_memory(path), {"vishal": "Sundry Creditors"})
+
+    def test_no_memory_file_is_empty(self):
+        from ledgerflow import memory as mem
+        self.assertEqual(mem.load_memory(None), {})
 
 
 class TestConnectors(unittest.TestCase):

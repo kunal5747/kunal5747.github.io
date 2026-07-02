@@ -67,9 +67,16 @@ Maharashtra PDF: **1,108 transactions** parsed into balanced Tally vouchers.
 
 Transfer-heavy accounts can have thousands of unclassified lines but only a
 handful of distinct payees. The suspense loop **groups by counterparty**
-(`review_groups.json`), so the client answers once per party — not once per
-transaction. In the run above, 979 suspense lines collapsed to 283 unique
-parties to ask about.
+(`review_groups.json`), merging truncated name variants ('Kunal' /
+'Kunal Dnyanoba'), so the client answers once per party — not once per
+transaction. In the run above, 979 suspense lines collapsed to ~272 parties.
+
+### Gets smarter every month
+
+Answers are remembered. Once a client says "Vishal = Sundry Creditors",
+LedgerFlow stores it (`--memory`) and auto-applies it to that payee on every
+future statement. On the real statement above, **2 answers auto-classified 59
+transactions** on the next run — the auto-rate climbs the more it's used.
 
 ---
 

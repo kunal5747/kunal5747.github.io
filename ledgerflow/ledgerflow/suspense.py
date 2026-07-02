@@ -88,6 +88,38 @@ _NON_PARTY = {
 }
 
 
+def canon(name: str) -> str:
+    """Normalise a name for comparison: lowercase, alphanumerics only."""
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
+def cluster_parties(parties: set[str]) -> dict[str, str]:
+    """Map each payee name to a representative, merging truncated duplicates.
+
+    Bank narrations truncate names ('Kunal' / 'Kunal Dnyanoba'). We merge a
+    shorter name into a longer one only when it is a **whole-word prefix** of
+    the longer (so 'Shreya' does NOT absorb into 'Shreyash') — a conservative
+    rule that avoids wrongly combining two different people.
+    """
+    rep_of: dict[str, str] = {}
+    reps: list[str] = []
+    for name in sorted(parties, key=len, reverse=True):  # longest = most complete
+        low = name.lower().strip()
+        placed = False
+        for rep in reps:
+            rl = rep.lower()
+            if len(low) >= 4 and rl.startswith(low) and (
+                len(rl) == len(low) or not rl[len(low)].isalnum()
+            ):
+                rep_of[name] = rep
+                placed = True
+                break
+        if not placed:
+            reps.append(name)
+            rep_of[name] = name
+    return rep_of
+
+
 def extract_counterparty(narration: str) -> str:
     """Best-effort payee/payer name from a slash-delimited bank narration.
 
@@ -97,8 +129,11 @@ def extract_counterparty(narration: str) -> str:
     for part in narration.split("/"):
         letters = re.sub(r"[^A-Za-z ]", "", part).strip()
         token = letters.replace(" ", "").upper()
-        if len(letters) >= 3 and token not in _NON_PARTY:
-            return letters.title()
+        if len(letters) < 3 or token in _NON_PARTY:
+            continue
+        if set(token) <= {"X"}:  # masked account no. like 'XXXXXX6831'
+            continue
+        return letters.title()
     return ""
 
 
@@ -109,11 +144,14 @@ def group_review(txns: list[Transaction]) -> list[dict]:
     a handful of *distinct* payees. Grouping means the client answers once per
     party instead of once per transaction.
     """
+    pending = [t for t in txns if t.status == TxnStatus.SUSPENSE]
+    parties = {extract_counterparty(t.narration) or t.narration[:24] for t in pending}
+    rep_of = cluster_parties(parties)
+
     groups: dict[str, dict] = {}
-    for txn in txns:
-        if txn.status != TxnStatus.SUSPENSE:
-            continue
-        party = extract_counterparty(txn.narration) or txn.narration[:24]
+    for txn in pending:
+        raw = extract_counterparty(txn.narration) or txn.narration[:24]
+        party = rep_of.get(raw, raw)
         g = groups.setdefault(party, {
             "counterparty": party, "count": 0,
             "total_outflow": Decimal("0"), "total_inflow": Decimal("0"),

@@ -17,6 +17,7 @@ _DEFAULT_INPUT = _PKG.parent / "sample_data"
 _DEFAULT_RULES = _PKG.parent / "rules.json"
 _DEFAULT_RESPONSES = _PKG.parent / "sample_data" / "client_responses.json"
 _DEFAULT_OUTPUT = _PKG.parent / "output"
+_DEFAULT_MEMORY = _PKG.parent / "memory.json"
 
 
 def _print_summary(result: pipeline.PipelineResult, output: str) -> None:
@@ -26,6 +27,8 @@ def _print_summary(result: pipeline.PipelineResult, output: str) -> None:
     print(f"  Transactions ingested : {s['total']}")
     print(f"  Auto-classified       : {s['auto_classified']}  "
           f"({s['auto_rate'] * 100:.1f}%)")
+    if s.get("from_memory"):
+        print(f"  Auto from memory      : {s['from_memory']}  (learned payees)")
     print(f"  Resolved by client    : {s['resolved_by_client']}")
     print(f"  Still in suspense     : {s['pending_suspense']}  "
           f"({s.get('unique_review_parties', 0)} unique parties to ask)")
@@ -81,6 +84,8 @@ def main(argv: list[str] | None = None) -> int:
                      help="Path to rules.json")
     run.add_argument("--responses", default=str(_DEFAULT_RESPONSES),
                      help="Client suspense responses (set to '' to skip)")
+    run.add_argument("--memory", default=str(_DEFAULT_MEMORY),
+                     help="Learned payee memory file (set to '' to disable)")
     run.add_argument("--company", default="Demo Company",
                      help="Company name for the export")
     run.add_argument("--connector", default="tally",
@@ -113,6 +118,7 @@ def main(argv: list[str] | None = None) -> int:
             tally_port=args.tally_port,
             statement_file=args.statement,
             statement_source=args.statement_type,
+            memory_path=args.memory or None,
         )
         _print_summary(result, args.output)
     return 0

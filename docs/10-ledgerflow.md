@@ -100,8 +100,13 @@ python -m ledgerflow.cli run --statement statement.pdf   # needs: pip install py
 
 **Proven on real data.** A real 16-page Bank of Maharashtra PDF ran end-to-end:
 **1,108 transactions** parsed into balanced Tally vouchers, bank charges
-auto-classified, and the 979 remaining transfers grouped into 283 unique
-counterparties — so the client answers once per payee, not once per line.
+auto-classified, and the 979 remaining transfers grouped into ~272 unique
+counterparties (truncated name variants merged) — so the client answers once
+per payee, not once per line.
+
+**It learns.** Answers are remembered per payee and auto-applied to future
+statements. On that statement, **2 client answers auto-classified 59
+transactions** on the next run — the auto-rate climbs the more it is used.
 
 ---
 
