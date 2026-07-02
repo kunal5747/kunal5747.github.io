@@ -71,6 +71,13 @@ principle made concrete: the machine never invents a classification it isn't
 sure of. Anything still unanswered is parked in **Suspense A/c** so nothing is
 ever dropped.
 
+**The review page is live.** A no-login, mobile-first page renders the grouped
+suspense items as simple dropdowns — [try it here](../review/). The client taps
+what each payee was; the page produces an answers file (or a WhatsApp share)
+that the accountant feeds straight back with `--group-responses`, resolving
+every matching transaction at once. On the real statement, answering the **top
+10 payees classified 449 transactions** — clean rate 11.6% → 52.2%.
+
 ### 4 · Export — a connector for whatever they use
 
 Export is handled by **pluggable connectors**, so LedgerFlow isn't locked to one

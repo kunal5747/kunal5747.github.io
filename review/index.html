@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>LedgerFlow — Quick Review</title>
+<meta name="description" content="Tap to tell us what each payment was. No login needed." />
+<style>
+  :root{
+    --bg:#0b1020; --card:#151d3b; --card2:#111834; --border:#263056;
+    --text:#e8ecf8; --muted:#9aa6cc; --accent:#6ea8fe; --in:#7ef0c8; --out:#ff9db1;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;padding-bottom:96px}
+  .wrap{max-width:640px;margin:0 auto;padding:16px}
+  header{padding:22px 0 8px}
+  .eyebrow{color:var(--in);letter-spacing:2px;text-transform:uppercase;font-size:11px}
+  h1{font-size:24px;margin:6px 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin:0}
+  .banner{background:var(--card2);border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;color:var(--muted);font-size:13px;margin:14px 0}
+  .progress{position:sticky;top:0;background:var(--bg);padding:10px 0 8px;z-index:5}
+  .bar{height:8px;background:var(--card);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--in));transition:width .25s}
+  .ptext{font-size:13px;color:var(--muted);margin-top:6px}
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--border);
+    border-radius:14px;padding:16px;margin:12px 0}
+  .card.done{border-color:var(--in)}
+  .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .who{font-size:18px;font-weight:600}
+  .count{font-size:12px;color:var(--muted);white-space:nowrap}
+  .amts{font-size:13px;margin:6px 0 2px}
+  .amts .o{color:var(--out)} .amts .i{color:var(--in)}
+  .narr{color:var(--muted);font-size:12px;font-family:ui-monospace,Menlo,monospace;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  select{width:100%;margin-top:12px;padding:12px;border-radius:10px;font-size:16px;
+    background:var(--bg);color:var(--text);border:1px solid var(--border);appearance:none}
+  select.set{border-color:var(--in);color:var(--in)}
+  .footbar{position:fixed;left:0;right:0;bottom:0;background:rgba(11,16,32,.95);
+    border-top:1px solid var(--border);padding:12px 16px;backdrop-filter:blur(6px)}
+  .footbar .inner{max-width:640px;margin:0 auto;display:flex;gap:10px;align-items:center}
+  button{font-size:15px;font-weight:600;border-radius:10px;padding:12px 16px;border:1px solid var(--border);
+    background:var(--card);color:var(--text);cursor:pointer}
+  button.primary{background:var(--accent);color:#08122c;border-color:transparent;flex:1}
+  button:disabled{opacity:.5}
+  .file{color:var(--muted);font-size:13px}
+  .file input{display:none}
+  .file label{color:var(--accent);cursor:pointer;text-decoration:underline}
+  dialog{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:14px;
+    width:min(560px,92vw);padding:18px}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  textarea{width:100%;height:150px;background:var(--bg);color:var(--text);border:1px solid var(--border);
+    border-radius:10px;padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .wa{background:#25d366;color:#04310f;border-color:transparent}
+  a.plain{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">LedgerFlow</div>
+    <h1>Quick review</h1>
+    <p class="sub" id="sub">Tap to tell us what each payment was. Takes a minute — no login.</p>
+    <p class="file">Reviewing a real file?
+      <label for="pick">load your review_groups.json</label>
+      <input id="pick" type="file" accept="application/json" />
+    </p>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <div class="progress">
+    <div class="bar"><i id="fill"></i></div>
+    <div class="ptext" id="ptext">Loading…</div>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<div class="footbar">
+  <div class="inner">
+    <div class="file" id="savedhint">Answers are kept on this device as you go.</div>
+    <button class="primary" id="done" disabled>Send answers</button>
+  </div>
+</div>
+
+<dialog id="out">
+  <h3 style="margin:0 0 6px">Answers ready 🎉</h3>
+  <p class="sub" id="outmsg"></p>
+  <textarea id="json" readonly></textarea>
+  <div class="actions">
+    <button id="copy">Copy</button>
+    <button id="download">Download file</button>
+    <button class="wa" id="whatsapp">Send on WhatsApp</button>
+    <button id="close">Close</button>
+  </div>
+  <p class="file" style="margin-top:10px">Your accountant runs this back through LedgerFlow with
+    <code>--group-responses</code> and every matching entry is posted to the ledger.</p>
+</dialog>
+
+<script>
+const params = new URLSearchParams(location.search);
+const STORE_KEY = "ledgerflow_review_answers";
+let GROUPS = [];
+let answers = loadAnswers();
+
+const $ = s => document.querySelector(s);
+const inr = n => "₹" + Number(n||0).toLocaleString("en-IN");
+const canon = s => (s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const keyOf = g => g.key || canon(g.counterparty);
+
+function loadAnswers(){ try{return JSON.parse(localStorage.getItem(STORE_KEY))||{}}catch(e){return {}} }
+function saveAnswers(){ localStorage.setItem(STORE_KEY, JSON.stringify(answers)); }
+
+function normalize(data){
+  const groups = Array.isArray(data) ? data : (data.groups || []);
+  const meta = Array.isArray(data) ? {} : data;
+  return {groups, meta};
+}
+
+async function boot(){
+  let data;
+  try{
+    const url = params.get("data") || "sample_review.json";
+    data = await (await fetch(url, {cache:"no-store"})).json();
+  }catch(e){
+    $("#ptext").textContent = "Could not load the review list.";
+    return;
+  }
+  render(data);
+}
+
+function render(data){
+  const {groups, meta} = normalize(data);
+  GROUPS = groups;
+  if(meta.company){ $("#sub").textContent = `For ${meta.company}${meta.period ? " · " + meta.period : ""}`; }
+  if(meta.note){ const b=$("#banner"); b.hidden=false; b.textContent = "ⓘ " + meta.note; }
+  const list = $("#list");
+  list.innerHTML = "";
+  groups.forEach(g => list.appendChild(card(g)));
+  refresh();
+}
+
+function card(g){
+  const k = keyOf(g);
+  const el = document.createElement("div");
+  el.className = "card";
+  el.dataset.key = k;
+  const out = Number(g.total_outflow||0), inn = Number(g.total_inflow||0);
+  el.innerHTML = `
+    <div class="row">
+      <div class="who"></div>
+      <div class="count">${g.count} ${g.count==1?"entry":"entries"}</div>
+    </div>
+    <div class="amts">${out?`<span class="o">out ${inr(out)}</span>`:""}${out&&inn?" · ":""}${inn?`<span class="i">in ${inr(inn)}</span>`:""}</div>
+    <div class="narr"></div>
+  `;
+  el.querySelector(".who").textContent = g.counterparty;
+  el.querySelector(".narr").textContent = g.sample_narration || "";
+  const sel = document.createElement("select");
+  sel.innerHTML = `<option value="">— what was this? —</option>` +
+    (g.options||[]).map(o=>`<option>${o}</option>`).join("");
+  if(answers[k]){ sel.value = answers[k]; sel.classList.add("set"); el.classList.add("done"); }
+  sel.addEventListener("change", () => {
+    if(sel.value){ answers[k]=sel.value; sel.classList.add("set"); el.classList.add("done"); }
+    else { delete answers[k]; sel.classList.remove("set"); el.classList.remove("done"); }
+    saveAnswers(); refresh();
+  });
+  el.appendChild(sel);
+  return el;
+}
+
+function refresh(){
+  const total = GROUPS.length;
+  const done = GROUPS.filter(g=>answers[keyOf(g)]).length;
+  $("#fill").style.width = total ? (done/total*100)+"%" : "0%";
+  $("#ptext").textContent = total ? `${done} of ${total} payees classified` : "Nothing to review 🎉";
+  $("#done").disabled = done === 0;
+  $("#done").textContent = done ? `Send ${done} answer${done>1?"s":""}` : "Send answers";
+}
+
+function buildPayload(){
+  const chosen = {};
+  GROUPS.forEach(g => { const k=keyOf(g); if(answers[k]) chosen[k]=answers[k]; });
+  return {answers: chosen};
+}
+
+$("#done").addEventListener("click", () => {
+  const payload = buildPayload();
+  const n = Object.keys(payload.answers).length;
+  $("#outmsg").textContent = `${n} payee${n>1?"s":""} classified. Send this back to your accountant.`;
+  $("#json").value = JSON.stringify(payload, null, 2);
+  $("#out").showModal();
+});
+$("#close").addEventListener("click", ()=>$("#out").close());
+$("#copy").addEventListener("click", async ()=>{
+  await navigator.clipboard.writeText($("#json").value); $("#copy").textContent="Copied ✓";
+  setTimeout(()=>$("#copy").textContent="Copy",1500);
+});
+$("#download").addEventListener("click", ()=>{
+  const blob = new Blob([$("#json").value], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "group_responses.json"; a.click();
+});
+$("#whatsapp").addEventListener("click", ()=>{
+  const compact = JSON.stringify(buildPayload().answers);
+  const msg = `LedgerFlow — my classifications:\n${compact}`;
+  window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+});
+$("#pick").addEventListener("change", e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => { try{ render(JSON.parse(r.result)); }catch(err){ alert("That file isn't valid JSON."); } };
+  r.readAsText(f);
+});
+
+boot();
+</script>
+</body>
+</html>

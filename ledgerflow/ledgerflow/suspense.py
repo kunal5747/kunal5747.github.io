@@ -165,6 +165,7 @@ def group_review(txns: list[Transaction]) -> list[dict]:
     result = []
     for g in sorted(groups.values(), key=lambda x: x["count"], reverse=True):
         result.append({
+            "key": canon(g["counterparty"]),  # stable id the review page answers by
             "counterparty": g["counterparty"],
             "count": g["count"],
             "total_outflow": f"{g['total_outflow']:.2f}",
@@ -210,6 +211,38 @@ def apply_responses(
     return resolved
 
 
+def apply_group_responses(txns: list[Transaction], mapping: dict[str, str]) -> int:
+    """Apply per-payee answers from the hosted review page.
+
+    ``mapping`` is keyed by the group ``key`` (canonical counterparty) as
+    emitted by :func:`group_review`; the same clustering is recomputed so every
+    transaction of a payee resolves from a single answer. Returns count resolved.
+    """
+    if not mapping:
+        return 0
+    pending = [t for t in txns if t.status == TxnStatus.SUSPENSE]
+    parties = {extract_counterparty(t.narration) or t.narration[:24] for t in pending}
+    rep_of = cluster_parties(parties)
+    resolved = 0
+    for txn in pending:
+        raw = extract_counterparty(txn.narration) or txn.narration[:24]
+        rep = rep_of.get(raw, raw)
+        answer = mapping.get(canon(rep)) or mapping.get(rep)
+        if not answer:
+            continue
+        txn.ledger = _ledger_for_answer(answer)
+        txn.voucher_type = (
+            VoucherType.PAYMENT
+            if txn.direction == Direction.OUTFLOW
+            else VoucherType.RECEIPT
+        )
+        txn.status = TxnStatus.RESOLVED
+        txn.confidence = 1.0
+        txn.matched_rule = "client-response"
+        resolved += 1
+    return resolved
+
+
 def load_responses(path: str | Path | None) -> dict[str, str]:
     if not path:
         return {}
@@ -217,3 +250,16 @@ def load_responses(path: str | Path | None) -> dict[str, str]:
     if not path.exists():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_group_responses(path: str | Path | None) -> dict[str, str]:
+    """Load answers from the review page: accepts {"answers": {...}} or a flat map."""
+    if not path:
+        return {}
+    path = Path(path)
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(data, dict) and "answers" in data:
+        return data["answers"]
+    return data if isinstance(data, dict) else {}

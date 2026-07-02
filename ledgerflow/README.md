@@ -71,6 +71,22 @@ handful of distinct payees. The suspense loop **groups by counterparty**
 'Kunal Dnyanoba'), so the client answers once per party — not once per
 transaction. In the run above, 979 suspense lines collapsed to ~272 parties.
 
+### The hosted review page
+
+A no-login, mobile-first page ([`/review`](../review/)) renders
+`review_groups.json` as tap-friendly dropdowns. The client says what each payee
+was; the page exports a `group_responses.json` (or a WhatsApp message) that you
+feed straight back:
+
+```bash
+python -m ledgerflow.cli run --statement statement.pdf \
+    --group-responses group_responses.json
+```
+
+Every transaction of each answered payee resolves at once. On the real
+statement, answering the **top 10 payees classified 449 transactions**
+(clean rate 11.6% → 52.2%).
+
 ### Gets smarter every month
 
 Answers are remembered. Once a client says "Vishal = Sundry Creditors",
