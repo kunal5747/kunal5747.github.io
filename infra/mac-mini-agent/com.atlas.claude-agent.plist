@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd job for the ATLAS Mac Mini agent.
+
+  Do not edit this template's __PLACEHOLDERS__ by hand — run ./install.sh,
+  which substitutes them and installs a copy into ~/Library/LaunchAgents/.
+
+  Cadence: every 15 minutes (StartInterval = 900 seconds).
+  RunAtLoad fires one tick immediately when the job is loaded / on login.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.atlas.claude-agent</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__REPO_DIR__/infra/mac-mini-agent/run-agent.sh</string>
+    </array>
+
+    <key>StartInterval</key>
+    <integer>900</integer>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Ensure Claude Code and git are on PATH for a non-interactive shell. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>ATLAS_AGENT_BRANCH</key>
+        <string>__BRANCH__</string>
+    </dict>
+
+    <key>WorkingDirectory</key>
+    <string>__REPO_DIR__</string>
+
+    <key>StandardOutPath</key>
+    <string>__REPO_DIR__/infra/mac-mini-agent/logs/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>__REPO_DIR__/infra/mac-mini-agent/logs/launchd.err.log</string>
+
+    <!-- Don't restart tight-loop on exit; we want the interval, not respawn. -->
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>

@@ -69,6 +69,22 @@ Read the product write-up: **[docs/10-ledgerflow.md](docs/10-ledgerflow.md)**.
 
 ---
 
+## Running the agents cheaply: Mac Mini hosting
+
+ATLAS agents don't need a data center to run. The
+**[Mac Mini agent-hosting kit](infra/mac-mini-agent/README.md)** turns a single
+always-on Mac Mini into a 24/7 worker for **~$21–23/month, flat** — a Claude
+Pro/Max subscription plus a `launchd` schedule that wakes Claude Code, works a
+job queue, and sleeps. It spends **zero tokens while idle**, avoiding the
+pay-per-token trap of a nonstop API agent.
+
+```bash
+cd infra/mac-mini-agent
+./install.sh          # loads the scheduled job; runs every 15 min
+```
+
+---
+
 ## Core Philosophy
 
 - **Plain-English-first** interaction
