@@ -11,18 +11,19 @@ description: >-
 # Video Insights
 
 The user pasted a video link (or asked about a video). Fetch its transcript and
-metadata with the bundled tool, then tell them about the video.
+metadata with the bundled `videobot.py` (in this skill's directory), then tell
+them about the video.
 
 ## Steps
 
 1. **Ensure yt-dlp is installed**: `python3 -m yt_dlp --version` — if missing,
-   run `pip3 install --user -r tools/video-bot/requirements.txt`.
+   run `pip3 install --user yt-dlp`.
 
-2. **Fetch** (transcripts can be long — always write to the scratchpad, never
-   stdout):
+2. **Fetch** (transcripts can be long — always write to a temp/scratchpad file,
+   never stdout):
 
    ```bash
-   python3 tools/video-bot/videobot.py "<URL>" -o <scratchpad>/video.md
+   python3 <this-skill-directory>/videobot.py "<URL>" -o <scratchpad>/video.md
    ```
 
    Useful flags: `--lang <code>` for non-English videos, `--format json` for
