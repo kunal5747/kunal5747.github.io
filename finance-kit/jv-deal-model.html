@@ -1,0 +1,421 @@
+<title>JV Deal Model — 90,600 sq ft</title>
+<style>
+  :root{
+    --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,.10);
+    --cash:#2a78d6; --debt:#eb6834;
+    --good:#006300; --goodbg:rgba(12,163,12,.10);
+    --warn:#8a5a00; --warnbg:rgba(250,178,25,.14);
+    --crit:#d03b3b; --critbg:rgba(208,59,59,.10);
+    --negzone:rgba(208,59,59,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --page:#0d0d0d; --surface:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+      --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,.10);
+      --cash:#3987e5; --debt:#d95926;
+      --good:#0ca30c; --goodbg:rgba(12,163,12,.16);
+      --warn:#fab219; --warnbg:rgba(250,178,25,.12);
+      --crit:#e66767; --critbg:rgba(208,59,59,.16);
+      --negzone:rgba(230,103,103,.07);
+    }
+  }
+  :root[data-theme="light"]{
+    --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,.10);
+    --cash:#2a78d6; --debt:#eb6834;
+    --good:#006300; --goodbg:rgba(12,163,12,.10);
+    --warn:#8a5a00; --warnbg:rgba(250,178,25,.14);
+    --crit:#d03b3b; --critbg:rgba(208,59,59,.10);
+    --negzone:rgba(208,59,59,.06);
+  }
+  :root[data-theme="dark"]{
+    --page:#0d0d0d; --surface:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,.10);
+    --cash:#3987e5; --debt:#d95926;
+    --good:#0ca30c; --goodbg:rgba(12,163,12,.16);
+    --warn:#fab219; --warnbg:rgba(250,178,25,.12);
+    --crit:#e66767; --critbg:rgba(208,59,59,.16);
+    --negzone:rgba(230,103,103,.07);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--page); color:var(--ink);
+    font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:1020px; margin:0 auto; padding:28px 16px 64px}
+  header{margin-bottom:22px}
+  .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  h1{font-size:clamp(21px,4vw,28px); margin:6px 0 8px; line-height:1.2; text-wrap:balance; font-weight:700}
+  .sub{color:var(--ink2); max-width:62ch; margin:0}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px}
+  section{margin-top:18px}
+  h2{font-size:13px; letter-spacing:.10em; text-transform:uppercase; color:var(--ink2); margin:0 0 12px; font-weight:600}
+
+  /* KPI tiles */
+  .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px}
+  .kpi{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .kpi .lab{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .kpi .val{font-size:24px; font-weight:700; margin-top:2px; line-height:1.15}
+  .kpi .note{font-size:12px; color:var(--ink2); margin-top:2px}
+
+  /* verdict */
+  .verdict{display:flex; gap:10px; align-items:flex-start; border-radius:10px; padding:12px 14px; margin-top:10px; font-size:14px}
+  .verdict .ico{font-weight:800; flex:none; width:20px; text-align:center}
+  .v-good{background:var(--goodbg); color:var(--good)}
+  .v-warn{background:var(--warnbg); color:var(--warn)}
+  .v-crit{background:var(--critbg); color:var(--crit)}
+
+  /* chart */
+  .legend{display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px; font-size:13px; color:var(--ink2)}
+  .legend .chip{display:inline-flex; align-items:center; gap:6px}
+  .legend .sw{width:14px; height:3px; border-radius:2px; display:inline-block}
+  .chartbox{position:relative}
+  svg{display:block; width:100%; height:auto}
+  .tip{
+    position:absolute; pointer-events:none; background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; padding:8px 10px; font-size:12.5px; box-shadow:0 4px 14px rgba(0,0,0,.12);
+    display:none; min-width:150px; z-index:3;
+  }
+  .tip b{font-variant-numeric:tabular-nums}
+  .tip .row{display:flex; justify-content:space-between; gap:12px}
+  .tip .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+
+  /* slider */
+  .slider-row{display:flex; align-items:center; gap:12px; margin-top:14px; flex-wrap:wrap}
+  .slider-row label{font-size:13px; color:var(--ink2); font-weight:600}
+  .slider-row input[type=range]{flex:1; min-width:160px; accent-color:var(--debt)}
+  .slider-row output{font-size:13px; font-weight:700; min-width:9ch}
+  .delaynote{font-size:13px; color:var(--ink2); margin-top:6px}
+  .delaynote b{color:var(--crit)}
+
+  /* inputs */
+  .groups{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px}
+  .group{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px}
+  .group h3{margin:0 0 10px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .field{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:5px 0}
+  .field label{font-size:13.5px; color:var(--ink2); flex:1}
+  .field input{
+    width:96px; padding:6px 8px; font:inherit; font-size:14px; text-align:right;
+    font-variant-numeric:tabular-nums; color:var(--ink);
+    background:var(--page); border:1px solid var(--baseline); border-radius:7px;
+  }
+  .field input:focus{outline:2px solid var(--cash); outline-offset:1px; border-color:transparent}
+  .assume{font-size:11px; color:var(--warn); background:var(--warnbg); border-radius:5px; padding:1px 6px; margin-left:6px; font-weight:600; white-space:nowrap}
+
+  /* partners */
+  .partners{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px}
+
+  /* table */
+  details{margin-top:18px}
+  summary{cursor:pointer; font-weight:600; color:var(--ink2); font-size:14px; padding:8px 2px}
+  .tblwrap{overflow-x:auto; border:1px solid var(--border); border-radius:10px}
+  table{border-collapse:collapse; width:100%; font-size:13px; min-width:520px}
+  th,td{padding:6px 12px; text-align:right; font-variant-numeric:tabular-nums; border-bottom:1px solid var(--grid); white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--muted); font-size:11px; letter-spacing:.06em; text-transform:uppercase; position:sticky; top:0; background:var(--surface)}
+  tr:last-child td{border-bottom:none}
+  td.neg{color:var(--crit)}
+  .foot{margin-top:22px; font-size:12.5px; color:var(--muted); max-width:70ch}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">JV deal model · live deal</div>
+    <h1>90,600 sq ft Joint Venture — cash-flow &amp; funding model</h1>
+    <p class="sub">Your real numbers are pre-filled. Fields marked
+      <span class="assume">assumed</span> are my placeholders — put in your true figures and
+      every number on this page recalculates instantly.</p>
+  </header>
+
+  <section>
+    <h2>Deal at a glance</h2>
+    <div class="kpis" id="kpis"></div>
+    <div id="verdict"></div>
+  </section>
+
+  <section>
+    <h2>Cash in hand vs loan outstanding</h2>
+    <div class="card">
+      <div class="legend">
+        <span class="chip"><span class="sw" style="background:var(--cash)"></span>Cash in hand</span>
+        <span class="chip"><span class="sw" style="background:var(--debt)"></span>Loan outstanding</span>
+      </div>
+      <div class="chartbox">
+        <svg id="chart" viewBox="0 0 960 300" role="img" aria-label="Monthly cash in hand and loan outstanding over the project timeline"></svg>
+        <div class="tip" id="tip"></div>
+      </div>
+      <div class="slider-row">
+        <label for="delay">Delay scenario</label>
+        <input type="range" id="delay" min="0" max="12" step="1" value="0">
+        <output id="delayout">no delay</output>
+      </div>
+      <div class="delaynote" id="delaynote"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Inputs</h2>
+    <div class="groups">
+      <div class="group">
+        <h3>Deal</h3>
+        <div class="field"><label for="area">Saleable area (sq ft)</label><input id="area" type="number" value="90600" step="100"></div>
+        <div class="field"><label for="lo">Landowner share (%)</label><input id="lo" type="number" value="41.5" step="0.5" min="0" max="80"></div>
+        <div class="field"><label for="partners">Partners</label><input id="partners" type="number" value="3" step="1" min="1"></div>
+      </div>
+      <div class="group">
+        <h3>Costs (₹ lakh unless noted)</h3>
+        <div class="field"><label for="deposit">Refundable deposit</label><input id="deposit" type="number" value="160" step="5"></div>
+        <div class="field"><label for="plan">Plan &amp; sanction</label><input id="plan" type="number" value="145" step="5"></div>
+        <div class="field"><label for="crate">Construction ₹/sq ft</label><input id="crate" type="number" value="2200" step="50"></div>
+        <div class="field"><label for="credit">Material on credit (%)</label><input id="credit" type="number" value="50" step="5" min="0" max="80"></div>
+      </div>
+      <div class="group">
+        <h3>Revenue<span class="assume" style="margin-left:8px">check these</span></h3>
+        <div class="field"><label for="price">Base price ₹/sq ft saleable<span class="assume">from comp</span></label><input id="price" type="number" value="6000" step="100"></div>
+        <div class="field"><label for="salestart">Sales start (month)</label><input id="salestart" type="number" value="9" step="1" min="0"></div>
+        <div class="field"><label for="cmonths">Construction (months)</label><input id="cmonths" type="number" value="30" step="1" min="6"></div>
+      </div>
+      <div class="group">
+        <h3>Funding</h3>
+        <div class="field"><label for="own">Own cash, all partners (₹ lakh)</label><input id="own" type="number" value="505" step="5"></div>
+        <div class="field"><label for="brate">Bridge rate (%/yr)</label><input id="brate" type="number" value="24" step="1"></div>
+        <div class="field"><label for="cfrate">Constr. finance (%/yr)</label><input id="cfrate" type="number" value="14" step="1"></div>
+        <div class="field"><label for="refi">Refinance at month</label><input id="refi" type="number" value="9" step="1" min="0"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Per partner (equal split)</h2>
+    <div class="partners" id="partnertiles"></div>
+  </section>
+
+  <details>
+    <summary>Monthly table (data view)</summary>
+    <div class="tblwrap"><table id="tbl"></table></div>
+  </details>
+
+  <p class="foot">Model: linear construction spend from month 2; material credit repaid after 3 months;
+  collections spread from sales start to 3 months past completion; deposit refunded at the end;
+  loan drawn only when cash runs out, interest capitalised monthly at the bridge rate until the
+  refinance month, then at the construction-finance rate. It's a planning tool, not accounting —
+  verify any funding decision with your CA.</p>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const inputs = ["area","lo","partners","deposit","plan","crate","credit","price","salestart","cmonths","own","brate","cfrate","refi"];
+
+  function params(){
+    return {
+      area:+$("area").value||0, lo:+$("lo").value||0, partners:Math.max(1,+$("partners").value||1),
+      deposit:+$("deposit").value||0, plan:+$("plan").value||0, crate:+$("crate").value||0,
+      credit:Math.min(80,+$("credit").value||0), price:+$("price").value||0,
+      salesStart:+$("salestart").value||0, cmonths:Math.max(6,+$("cmonths").value||30),
+      own:+$("own").value||0, brate:+$("brate").value||0, cfrate:+$("cfrate").value||0,
+      refi:+$("refi").value||0, delay:+$("delay").value||0
+    };
+  }
+
+  // all money in ₹ lakh
+  function simulate(p){
+    const end = p.cmonths + p.delay;
+    const constrStart = 2;
+    const horizon = end + 7;
+    const constrTotal = p.area * p.crate / 1e5;
+    const devRev = p.area * (1 - p.lo/100) * p.price / 1e5;
+    const salesStart = p.salesStart + p.delay;
+    const collectEnd = end + 3;
+    const spendMonths = Math.max(1, end - constrStart);
+    const perMonthSpend = constrTotal / spendMonths;
+    const collMonths = Math.max(1, collectEnd - salesStart);
+    const perMonthColl = devRev / collMonths;
+    const creditLag = 3;
+    const creditRepay = new Array(horizon + creditLag + 2).fill(0);
+
+    let cash = p.own, debt = 0, totInterest = 0, peakDebt = 0, negMonths = 0;
+    const rows = [];
+    for (let m = 0; m <= horizon; m++){
+      let out = 0, inn = 0;
+      if (m === 0) out += p.deposit;
+      if (m < 3) out += p.plan / 3;
+      if (m >= constrStart && m < end){
+        const spend = perMonthSpend;
+        const cr = spend * p.credit/100;
+        out += spend - cr;
+        creditRepay[m + creditLag] += cr;
+      }
+      out += creditRepay[m] || 0;
+      if (m >= salesStart && m < collectEnd) inn += perMonthColl;
+      if (m === collectEnd) inn += p.deposit;
+
+      const rate = (m < p.refi + p.delay ? p.brate : p.cfrate) / 100 / 12;
+      const interest = debt * rate;
+      totInterest += interest;
+      out += interest;
+
+      cash += inn - out;
+      if (cash < 0){ debt += -cash; cash = 0; }
+      else if (debt > 0){ const r = Math.min(cash, debt); debt -= r; cash -= r; }
+      if (debt > 0) negMonths++;
+      peakDebt = Math.max(peakDebt, debt);
+      rows.push({m, inn, out, interest, cash, debt});
+    }
+    const profit = devRev - constrTotal - p.plan - totInterest;
+    return {rows, horizon, end, devRev, constrTotal, totInterest, peakDebt, negMonths, profit};
+  }
+
+  const cr = L => "₹" + (L/100).toLocaleString("en-IN",{maximumFractionDigits:2,minimumFractionDigits:2}) + " cr";
+  const crS = L => "₹" + (L/100).toLocaleString("en-IN",{maximumFractionDigits:1}) + " cr";
+
+  function kpiTile(lab, val, note){
+    return '<div class="kpi"><div class="lab">'+lab+'</div><div class="val">'+val+'</div>'+(note?'<div class="note">'+note+'</div>':'')+'</div>';
+  }
+
+  function render(){
+    const p = params();
+    const s = simulate(p);
+    const base = p.delay ? simulate({...p, delay:0}) : s;
+
+    const mult = p.own > 0 ? ((p.own + s.profit)/p.own) : 0;
+    $("kpis").innerHTML =
+      kpiTile("Peak outside funding", crS(s.peakDebt), s.peakDebt>0 ? "beyond your ₹"+(p.own/100).toFixed(2)+" cr own cash" : "own cash covers it") +
+      kpiTile("Total interest", crS(s.totInterest), s.negMonths + " months carrying debt") +
+      kpiTile("Net profit (all partners)", crS(s.profit), "revenue "+crS(s.devRev)+" − all costs") +
+      kpiTile("Equity multiple", mult.toFixed(2)+"×", "on ₹"+(p.own/100).toFixed(2)+" cr over ~"+Math.round((s.end+3)/12*10)/10+" yrs");
+
+    // verdict
+    let cls, ico, msg;
+    if (s.profit <= 0){
+      cls="v-crit"; ico="✕";
+      msg="At these numbers the project loses money. Check sale price and landowner share first — they move the result most.";
+    } else if (s.peakDebt < 1){
+      cls="v-good"; ico="✓";
+      msg="Self-funding: your own ₹"+(p.own/100).toFixed(2)+" cr carries the whole cycle — no loan needed at these numbers. Test the delay slider before trusting that.";
+    } else {
+      const r = s.totInterest / s.profit;
+      const pct = Math.round(r*100);
+      if (r <= 0.12){ cls="v-good"; ico="✓"; msg="Healthy: financing eats only "+pct+"% of profit. The deal can afford its own funding."; }
+      else if (r <= 0.25){ cls="v-warn"; ico="!"; msg="Watch it: financing eats "+pct+"% of profit. Fine if the timeline holds — a delay pushes this into the danger zone."; }
+      else { cls="v-crit"; ico="✕"; msg="Too thin: financing eats "+pct+"% of profit. Renegotiate the deposit into tranches, add equity, or improve the sale price before signing."; }
+    }
+    $("verdict").innerHTML = '<div class="verdict '+cls+'"><span class="ico">'+ico+'</span><span>'+msg+'</span></div>';
+
+    // delay note
+    if (p.delay > 0){
+      const lost = base.profit - s.profit;
+      $("delaynote").innerHTML = "A "+p.delay+"-month delay costs <b>"+crS(lost)+"</b> in extra interest — profit drops from "
+        + crS(base.profit) + " to " + crS(s.profit) + ".";
+      $("delayout").textContent = "+" + p.delay + " months";
+    } else {
+      $("delaynote").textContent = "Drag the slider to see what a construction or approval delay does to profit.";
+      $("delayout").textContent = "no delay";
+    }
+
+    // partners
+    const tiles = [];
+    tiles.push(kpiTile("Cash in / partner", crS(p.own/p.partners), p.partners+" equal partners"));
+    tiles.push(kpiTile("Profit / partner", crS(s.profit/p.partners), ""));
+    tiles.push(kpiTile("Return / partner", (p.own>0? Math.round(s.profit/p.own*100) : 0)+"%", "over ~"+Math.round((s.end+3)/12*10)/10+" years"));
+    $("partnertiles").innerHTML = tiles.join("");
+
+    drawChart(s);
+    drawTable(s);
+  }
+
+  // ---- chart ----
+  const svg = $("chart"), tip = $("tip");
+  let lastSim = null;
+  function drawChart(s){
+    lastSim = s;
+    const W=960, H=300, L=56, R=14, T=28, B=34;
+    const iw = W-L-R, ih = H-T-B;
+    const n = s.rows.length;
+    const maxY = Math.max(...s.rows.map(r=>Math.max(r.cash,r.debt)), 100) * 1.1;
+    const x = m => L + m/(n-1)*iw;
+    const y = v => T + ih - v/maxY*ih;
+    let g = "";
+    // grid + y ticks
+    const steps = 4;
+    for (let i=0;i<=steps;i++){
+      const v = maxY*i/steps, yy = y(v);
+      g += '<line x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'" stroke="var(--grid)" stroke-width="1"/>';
+      g += '<text x="'+(L-8)+'" y="'+(yy+4)+'" text-anchor="end" font-size="11" fill="var(--muted)" style="font-variant-numeric:tabular-nums">'+(v/100).toFixed(1)+'</text>';
+    }
+    g += '<text x="'+(L-8)+'" y="14" text-anchor="end" font-size="10" fill="var(--muted)">₹ cr</text>';
+    // x ticks every 6 months (skip any that would collide with the "month" caption)
+    for (let m=0;m<n;m+=6){
+      if (x(m) > W-R-48) continue;
+      g += '<text x="'+x(m)+'" y="'+(H-10)+'" text-anchor="middle" font-size="11" fill="var(--muted)" style="font-variant-numeric:tabular-nums">'+m+'</text>';
+    }
+    g += '<text x="'+(W-R)+'" y="'+(H-10)+'" text-anchor="end" font-size="10" fill="var(--muted)">month</text>';
+    // construction end marker
+    g += '<line x1="'+x(s.end)+'" y1="'+T+'" x2="'+x(s.end)+'" y2="'+(T+ih)+'" stroke="var(--baseline)" stroke-width="1" stroke-dasharray="3 4"/>'
+       + '<text x="'+(x(s.end)+4)+'" y="'+(T+12)+'" font-size="10" fill="var(--muted)">handover</text>';
+    // baseline
+    g += '<line x1="'+L+'" y1="'+y(0)+'" x2="'+(W-R)+'" y2="'+y(0)+'" stroke="var(--baseline)" stroke-width="1.5"/>';
+    // debt-carrying zone wash
+    const firstDebt = s.rows.findIndex(r=>r.debt>0);
+    let lastDebt = -1; s.rows.forEach((r,i)=>{ if(r.debt>0) lastDebt=i; });
+    if (firstDebt>=0){
+      g += '<rect x="'+x(firstDebt)+'" y="'+T+'" width="'+(x(lastDebt)-x(firstDebt))+'" height="'+ih+'" fill="var(--negzone)"/>';
+    }
+    // series
+    const path = key => s.rows.map((r,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(r[key]).toFixed(1)).join(" ");
+    g += '<path d="'+path("debt")+'" fill="none" stroke="var(--debt)" stroke-width="2" stroke-linejoin="round"/>';
+    g += '<path d="'+path("cash")+'" fill="none" stroke="var(--cash)" stroke-width="2" stroke-linejoin="round"/>';
+    // direct labels at peaks
+    let pk = s.rows.reduce((a,r,i)=> r.debt>s.rows[a].debt?i:a, 0);
+    if (s.rows[pk].debt>0){
+      g += '<circle cx="'+x(pk)+'" cy="'+y(s.rows[pk].debt)+'" r="4" fill="var(--debt)" stroke="var(--surface)" stroke-width="2"/>'
+         + '<text x="'+x(pk)+'" y="'+(y(s.rows[pk].debt)-9)+'" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--ink2)">peak '+(s.rows[pk].debt/100).toFixed(1)+' cr</text>';
+    }
+    const endCash = s.rows[n-1].cash;
+    g += '<circle cx="'+x(n-1)+'" cy="'+y(endCash)+'" r="4" fill="var(--cash)" stroke="var(--surface)" stroke-width="2"/>'
+       + '<text x="'+(x(n-1)-8)+'" y="'+(y(endCash)-9)+'" text-anchor="end" font-size="11.5" font-weight="700" fill="var(--ink2)">'+(endCash/100).toFixed(1)+' cr</text>';
+    // crosshair placeholder
+    g += '<line id="xh" x1="0" x2="0" y1="'+T+'" y2="'+(T+ih)+'" stroke="var(--baseline)" stroke-width="1" visibility="hidden"/>';
+    g += '<rect x="'+L+'" y="'+T+'" width="'+iw+'" height="'+ih+'" fill="transparent" id="hit"/>';
+    svg.innerHTML = g;
+
+    const hit = svg.querySelector("#hit"), xh = svg.querySelector("#xh");
+    function move(ev){
+      const pt = svg.createSVGPoint();
+      const e = ev.touches ? ev.touches[0] : ev;
+      pt.x = e.clientX; pt.y = e.clientY;
+      const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+      const m = Math.max(0, Math.min(n-1, Math.round((loc.x-L)/iw*(n-1))));
+      const r = s.rows[m];
+      xh.setAttribute("x1", x(m)); xh.setAttribute("x2", x(m));
+      xh.setAttribute("visibility","visible");
+      tip.style.display="block";
+      const box = svg.getBoundingClientRect();
+      const px = x(m)/W*box.width;
+      tip.style.left = Math.min(box.width-170, Math.max(0, px+12)) + "px";
+      tip.style.top = "10px";
+      tip.innerHTML = '<div style="font-weight:700;margin-bottom:3px">Month '+m+'</div>'
+        + '<div class="row"><span><span class="dot" style="background:var(--cash)"></span>Cash</span><b>'+cr(r.cash)+'</b></div>'
+        + '<div class="row"><span><span class="dot" style="background:var(--debt)"></span>Loan</span><b>'+cr(r.debt)+'</b></div>';
+    }
+    function leave(){ tip.style.display="none"; xh.setAttribute("visibility","hidden"); }
+    hit.onmousemove = move; hit.ontouchstart = move; hit.ontouchmove = move;
+    hit.onmouseleave = leave; hit.ontouchend = leave;
+  }
+
+  function drawTable(s){
+    let h = "<thead><tr><th>Month</th><th>In (₹ L)</th><th>Out (₹ L)</th><th>Interest (₹ L)</th><th>Cash (₹ cr)</th><th>Loan (₹ cr)</th></tr></thead><tbody>";
+    s.rows.forEach(r=>{
+      h += "<tr><td>"+r.m+"</td><td>"+r.inn.toFixed(0)+"</td><td>"+r.out.toFixed(0)+"</td><td>"+r.interest.toFixed(1)+"</td>"
+        + "<td>"+(r.cash/100).toFixed(2)+"</td><td class='"+(r.debt>0?"neg":"")+"'>"+(r.debt/100).toFixed(2)+"</td></tr>";
+    });
+    $("tbl").innerHTML = h + "</tbody>";
+  }
+
+  inputs.forEach(id => $(id).addEventListener("input", render));
+  $("delay").addEventListener("input", render);
+  render();
+})();
+</script>
